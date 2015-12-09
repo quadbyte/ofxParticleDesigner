@@ -47,14 +47,6 @@ typedef struct {
 } Particle;
 
 // ------------------------------------------------------------------------
-// Macros
-// ------------------------------------------------------------------------
-
-// Macro which converts degrees into radians
-#define DEGREES_TO_RADIANS(__ANGLE__) ((__ANGLE__) / 180.0 * PI)
-
-
-// ------------------------------------------------------------------------
 // ofxParticleEmitter
 // ------------------------------------------------------------------------
 class ofxParticleEmitter {
@@ -70,7 +62,7 @@ public:
   void setPosition(ofVec2f p) { sourcePosition = p; }
 
 protected:
-  void parseParticleConfig(ofxXmlSettings* settings);
+  void parseConfig(ofxXmlSettings* settings);
   void setupArrays();
   void loadTextureFromEncodedData(const char* encodedData);
 
@@ -113,7 +105,6 @@ private:
   float			emissionRate;
   float			emitCounter;
   float			elapsedTime;
-  int				lastUpdateMillis;
 
   bool			active, useTexture;
   int       particleIndex;	// Stores the number of particles that are going to be rendered

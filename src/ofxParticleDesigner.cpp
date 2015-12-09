@@ -1,8 +1,11 @@
 //
 //  ofxParticleDesigner.cpp
 //
-// Base on :
+// Based on :
+// https://github.com/llahiru/ofParticleDesigner
+// https://github.com/sroske/ofxParticleEmitter
 // https://github.com/71squared/ParticleEmitterDemo-ES2-ARC/tree/master/ParticleEmitterDemo-ES2-ARC/Particle%20Emitter
+
 
 #include "ofxParticleDesigner.h"
 #include "Poco/Base64Decoder.h"
@@ -34,7 +37,6 @@ ofxParticleEmitter::ofxParticleEmitter()
   emitCounter = 0.0f;
   elapsedTime = 0.0f;
   duration = -1;
-  lastUpdateMillis = 0;
 
   blendFuncSource = blendFuncDestination = 0;
 
@@ -74,7 +76,7 @@ bool ofxParticleEmitter::loadFromXml(const std::string& filename) {
   ofxXmlSettings*	settings = new ofxXmlSettings();
   active = settings->loadFile(filename);
   if (active) {
-    parseParticleConfig(settings);
+    parseConfig(settings);
     setupArrays();
   }
 
@@ -82,10 +84,10 @@ bool ofxParticleEmitter::loadFromXml(const std::string& filename) {
   return active;
 }
 // ------------------------------------------------------------------------
-void ofxParticleEmitter::parseParticleConfig(ofxXmlSettings*	settings)
+void ofxParticleEmitter::parseConfig(ofxXmlSettings*	settings)
 {
   if (settings == NULL) {
-    ofLog(OF_LOG_ERROR, "ofxParticleDesigner::parseParticleConfig() - XML settings is invalid!");
+    ofLog(OF_LOG_ERROR, "ofxParticleDesigner::parseConfig() - XML settings is invalid!");
     return;
   }
 
@@ -96,28 +98,28 @@ void ofxParticleEmitter::parseParticleConfig(ofxXmlSettings*	settings)
 
   emitterType = settings->getAttribute("emitterType", "value", emitterType);
 
-  sourcePosition.x  = settings->getAttribute("sourcePosition", "x", sourcePosition.x);
-  sourcePosition.y  = settings->getAttribute("sourcePosition", "y", sourcePosition.y);
+  sourcePosition.x = settings->getAttribute("sourcePosition", "x", sourcePosition.x);
+  sourcePosition.y = settings->getAttribute("sourcePosition", "y", sourcePosition.y);
 
-  sourcePositionVariance.x	= settings->getAttribute("sourcePositionVariance", "x", sourcePositionVariance.x);
-  sourcePositionVariance.y  = settings->getAttribute("sourcePositionVariance", "y", sourcePositionVariance.y);
+  sourcePositionVariance.x = settings->getAttribute("sourcePositionVariance", "x", sourcePositionVariance.x);
+  sourcePositionVariance.y = settings->getAttribute("sourcePositionVariance", "y", sourcePositionVariance.y);
 
-  speed             = settings->getAttribute("speed", "value", speed);
-  speedVariance     = settings->getAttribute("speedVariance", "value", speedVariance);
+  speed = settings->getAttribute("speed", "value", speed);
+  speedVariance = settings->getAttribute("speedVariance", "value", speedVariance);
   
-  particleLifespan	= settings->getAttribute("particleLifeSpan", "value", particleLifespan);
-  particleLifespanVariance	= settings->getAttribute("particleLifespanVariance", "value", particleLifespanVariance);
+  particleLifespan = settings->getAttribute("particleLifeSpan", "value", particleLifespan);
+  particleLifespanVariance = settings->getAttribute("particleLifespanVariance", "value", particleLifespanVariance);
   
-  angle                     = settings->getAttribute("angle", "value", angle);
-  angleVariance             = settings->getAttribute("angleVariance", "value", angleVariance);
+  angle = settings->getAttribute("angle", "value", angle);
+  angleVariance = settings->getAttribute("angleVariance", "value", angleVariance);
 
-  gravity.x                 = settings->getAttribute("gravity", "x", gravity.x);
-  gravity.y                 = settings->getAttribute("gravity", "y", gravity.y);
+  gravity.x = settings->getAttribute("gravity", "x", gravity.x);
+  gravity.y = settings->getAttribute("gravity", "y", gravity.y);
 
-  radialAcceleration        = settings->getAttribute("radialAcceleration", "value", radialAcceleration);
-  tangentialAcceleration		= settings->getAttribute("tangentialAcceleration", "value", tangentialAcceleration);
-  radialAccelVariance       = settings->getAttribute("radialAccelVariance", "value", radialAccelVariance);
-  tangentialAccelVariance		= settings->getAttribute("tangentialAccelVariance", "value", tangentialAccelVariance);
+  radialAcceleration = settings->getAttribute("radialAcceleration", "value", radialAcceleration);
+  tangentialAcceleration = settings->getAttribute("tangentialAcceleration", "value", tangentialAcceleration);
+  radialAccelVariance = settings->getAttribute("radialAccelVariance", "value", radialAccelVariance);
+  tangentialAccelVariance = settings->getAttribute("tangentialAccelVariance", "value", tangentialAccelVariance);
 
   startColor.r = settings->getAttribute("startColor", "red", startColor.r);
   startColor.g = settings->getAttribute("startColor", "green", startColor.g);
@@ -139,27 +141,27 @@ void ofxParticleEmitter::parseParticleConfig(ofxXmlSettings*	settings)
   finishColorVariance.b	= settings->getAttribute("finishColorVariance", "blue", finishColorVariance.b);
   finishColorVariance.a	= settings->getAttribute("finishColorVariance", "alpha", finishColorVariance.a);
 
-  maxParticles                = settings->getAttribute("maxParticles", "value", maxParticles);
-  startParticleSize           = settings->getAttribute("startParticleSize", "value", startParticleSize);
-  startParticleSizeVariance   = settings->getAttribute("startParticleSizeVariance", "value", startParticleSizeVariance);
-  finishParticleSize          = settings->getAttribute("finishParticleSize", "value", finishParticleSize);
-  finishParticleSizeVariance	= settings->getAttribute("finishParticleSizeVariance", "value", finishParticleSizeVariance);
-  duration                    = settings->getAttribute("duration", "value", duration);
-  blendFuncSource             = settings->getAttribute("blendFuncSource", "value", blendFuncSource);
-  blendFuncDestination        = settings->getAttribute("blendFuncDestination", "value", blendFuncDestination);
+  maxParticles = settings->getAttribute("maxParticles", "value", maxParticles);
+  startParticleSize = settings->getAttribute("startParticleSize", "value", startParticleSize);
+  startParticleSizeVariance = settings->getAttribute("startParticleSizeVariance", "value", startParticleSizeVariance);
+  finishParticleSize = settings->getAttribute("finishParticleSize", "value", finishParticleSize);
+  finishParticleSizeVariance = settings->getAttribute("finishParticleSizeVariance", "value", finishParticleSizeVariance);
+  duration = settings->getAttribute("duration", "value", duration);
+  blendFuncSource = settings->getAttribute("blendFuncSource", "value", blendFuncSource);
+  blendFuncDestination = settings->getAttribute("blendFuncDestination", "value", blendFuncDestination);
 
-  minRadius					= settings->getAttribute("minRadius", "value", minRadius);
+  minRadius	= settings->getAttribute("minRadius", "value", minRadius);
   minRadiusVariance	= settings->getAttribute("minRadiusVariance", "value", minRadiusVariance);
-  maxRadius					= settings->getAttribute("maxRadius", "value", maxRadius);
+  maxRadius	= settings->getAttribute("maxRadius", "value", maxRadius);
   maxRadiusVariance	= settings->getAttribute("maxRadiusVariance", "value", maxRadiusVariance);
 
-  rotatePerSecond         = settings->getAttribute("rotatePerSecond", "value", rotatePerSecond);
+  rotatePerSecond = settings->getAttribute("rotatePerSecond", "value", rotatePerSecond);
   rotatePerSecondVariance = settings->getAttribute("rotatePerSecondVariance", "value", rotatePerSecondVariance);
 
-  rotationStart         = settings->getAttribute("rotationStart", "value", rotationStart);
+  rotationStart = settings->getAttribute("rotationStart", "value", rotationStart);
   rotationStartVariance = settings->getAttribute("rotationStartVariance", "value", rotationStartVariance);
-  rotationEnd           = settings->getAttribute("rotationEnd", "value", rotationEnd);
-  rotationEndVariance   = settings->getAttribute("rotationEndVariance", "value", rotationEndVariance);
+  rotationEnd = settings->getAttribute("rotationEnd", "value", rotationEnd);
+  rotationEndVariance = settings->getAttribute("rotationEndVariance", "value", rotationEndVariance);
 
   // Calculate the emission rate
   emissionRate = maxParticles / particleLifespan;
@@ -270,10 +272,9 @@ void ofxParticleEmitter::initParticle(Particle* particle) {
 
   // Init the direction of the particle.  The newAngle is calculated using the angle passed in and the
   // angle variance.
-  float newAngle = DEGREES_TO_RADIANS(angle + angleVariance * ofRandomf());
+  float newAngle = DEG_TO_RAD * (angle + angleVariance * ofRandomf());
 
   // Create a new Vector2f using the newAngle
-  //Vector2f vector = Vector2fMake(cosf(newAngle), sinf(newAngle));
   ofVec2f vector = ofVec2f(cosf(newAngle), sinf(newAngle));
 
   // Calculate the vectorSpeed using the speed and speedVariance which has been passed in
@@ -281,12 +282,10 @@ void ofxParticleEmitter::initParticle(Particle* particle) {
 
   // The particles direction vector is calculated by taking the vector calculated above and
   // multiplying that by the speed
-  //particle->direction = Vector2fMultiply(vector, vectorSpeed);
   particle->direction =  vector * vectorSpeed;
 
   // Calculate the particles life span using the life span and variance passed in
-  particle->timeToLive = MAX(0, particleLifespan + particleLifespanVariance * ofRandomf());
-
+  particle->timeToLive = MAX(0, (particleLifespan + particleLifespanVariance * ofRandomf()));
 
   float startRadius = maxRadius + maxRadiusVariance * ofRandomf();
   float endRadius = minRadius + minRadiusVariance * ofRandomf();
@@ -294,34 +293,38 @@ void ofxParticleEmitter::initParticle(Particle* particle) {
   // Set the default diameter of the particle from the source position
   particle->radius = startRadius;
   particle->radiusDelta = (endRadius - startRadius) / particle->timeToLive;
-  particle->angle = DEGREES_TO_RADIANS(angle + angleVariance * ofRandomf());
-  particle->degreesPerSecond = DEGREES_TO_RADIANS(rotatePerSecond + rotatePerSecondVariance * ofRandomf());
+  particle->angle = DEG_TO_RAD * (angle + angleVariance * ofRandomf());
+  particle->degreesPerSecond = DEG_TO_RAD * (rotatePerSecond + rotatePerSecondVariance * ofRandomf());
 
   particle->radialAcceleration = radialAcceleration + radialAccelVariance * ofRandomf();
   particle->tangentialAcceleration = tangentialAcceleration + tangentialAccelVariance * ofRandomf();
 
-
   // Calculate the particle size using the start and finish particle sizes
   float particleStartSize = startParticleSize + startParticleSizeVariance * ofRandomf();
   float particleFinishSize = finishParticleSize + finishParticleSizeVariance * ofRandomf();
-  particle->particleSizeDelta = (particleFinishSize - particleStartSize) / particle->timeToLive;
   particle->particleSize = MAX(0, particleStartSize);
+  if (particle->timeToLive) {
+    particle->particleSizeDelta = (particleFinishSize - particleStartSize) / particle->timeToLive;
+  }
+  else {
+    particle->particleSizeDelta = 0;
+  }
 
   // Calculate the color the particle should have when it starts its life.  All the elements
   // of the start color passed in along with the variance are used to calculate the star color
   ofFloatColor start;
-  start.r = startColor.r + startColorVariance.r * ofRandomf();
-  start.g = startColor.g + startColorVariance.g * ofRandomf();
-  start.b = startColor.b + startColorVariance.b * ofRandomf();
-  start.a = startColor.a + startColorVariance.a * ofRandomf();
+  start.r = (startColor.r + startColorVariance.r * ofRandomf());
+  start.g = (startColor.g + startColorVariance.g * ofRandomf());
+  start.b = (startColor.b + startColorVariance.b * ofRandomf());
+  start.a = (startColor.a + startColorVariance.a * ofRandomf());
 
   // Calculate the color the particle should be when its life is over.  This is done the same
   // way as the start color above
   ofFloatColor end;
-  end.r = finishColor.r + finishColorVariance.r * ofRandomf();
-  end.g = finishColor.g + finishColorVariance.g * ofRandomf();
-  end.b = finishColor.b + finishColorVariance.b * ofRandomf();
-  end.a = finishColor.a + finishColorVariance.a * ofRandomf();
+  end.r = (finishColor.r + finishColorVariance.r * ofRandomf());
+  end.g = (finishColor.g + finishColorVariance.g * ofRandomf());
+  end.b = (finishColor.b + finishColorVariance.b * ofRandomf());
+  end.a = (finishColor.a + finishColorVariance.a * ofRandomf());
 
   // Calculate the delta which is to be applied to the particles color during each cycle of its
   // life.  The delta calculation uses the life span of the particle to make sure that the
@@ -329,10 +332,15 @@ void ofxParticleEmitter::initParticle(Particle* particle) {
   // loop is using a fixed delta value we can calculate the delta color once saving cycles in the
   // update method
   particle->color = start;
-  particle->deltaColor.r = (end.r - start.r) / particle->timeToLive;
-  particle->deltaColor.g = (end.g - start.g) / particle->timeToLive;
-  particle->deltaColor.b = (end.b - start.b) / particle->timeToLive;
-  particle->deltaColor.a = (end.a - start.a) / particle->timeToLive;
+  if (particle->timeToLive) {
+    particle->deltaColor.r = (end.r - start.r) / particle->timeToLive;
+    particle->deltaColor.g = (end.g - start.g) / particle->timeToLive;
+    particle->deltaColor.b = (end.b - start.b) / particle->timeToLive;
+    particle->deltaColor.a = (end.a - start.a) / particle->timeToLive;
+  }
+  else {
+    particle->deltaColor = 0;
+  }
 
   // Calculate the rotation
   float startA = rotationStart + rotationStartVariance * ofRandomf();
@@ -467,7 +475,6 @@ void ofxParticleEmitter::update() {
 // ------------------------------------------------------------------------
 // Render
 // ------------------------------------------------------------------------
-
 void ofxParticleEmitter::draw() {
   if (!active) {
     return;
@@ -480,10 +487,10 @@ void ofxParticleEmitter::draw() {
 }
 // ------------------------------------------------------------------------
 void ofxParticleEmitter::drawParticles() {
-  glEnable(GL_BLEND);
+  //glEnable(GL_BLEND);
 
   // BLENDING MODE ARO NOT PROPERLY RESPECTED FOR NOW
-  ofEnableAlphaBlending();
+//  ofEnableAlphaBlending();
 //  glBlendEquation(GL_FUNC_ADD);
   //glBlendFunc(blendFuncSource, blendFuncDestination);
   //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -498,6 +505,6 @@ void ofxParticleEmitter::drawParticles() {
       texture->draw(0, 0, p->particleSize, p->particleSize);
     ofPopMatrix();
   }
-  glDisable(GL_BLEND);
+//  glDisable(GL_BLEND);
 }
 // ------------------------------------------------------------------------
