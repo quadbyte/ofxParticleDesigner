@@ -236,7 +236,7 @@ void ofxParticleEmitter::setupArrays() {
   elapsedTime = 0;
 }
 // ------------------------------------------------------------------------
-void ofxParticleEmitter::stopEmitter() {
+void ofxParticleEmitter::stop() {
   elapsedTime = 0;
   emitCounter = 0;
   particleCount = 0;
@@ -383,7 +383,7 @@ void ofxParticleEmitter::update() {
 
     elapsedTime += aDelta;
     if (duration != -1 && duration < elapsedTime) {
-      stopEmitter();
+      stop();
     }
   }
 

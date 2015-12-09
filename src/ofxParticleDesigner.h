@@ -60,16 +60,19 @@ public:
   void draw();
   void cleanUp();
   void setPosition(ofVec2f p) { sourcePosition = p; }
-
+  int getParticlesCount() { return particleCount; }
+  int getMaxParticles() { return maxParticles; }
+  
 protected:
   void parseConfig(ofxXmlSettings* settings);
   void setupArrays();
   void loadTextureFromEncodedData(const char* encodedData);
 
-  void stopEmitter();
+  void stop();
   bool addParticle();
   void initParticle(Particle* particle);
   void drawParticles();
+  
 
 private:
   int         emitterType;
