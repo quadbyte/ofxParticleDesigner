@@ -25,4 +25,8 @@ class ofApp : public ofBaseApp{
   private:
     ofxParticleEmitter emitter;
   
+    vector<string> pexNames;
+    int pexIndex;
+    ofVec2f mousePosition;
+  
 };

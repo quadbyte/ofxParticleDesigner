@@ -4,9 +4,17 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
   ofBackground(0);
+  
+  pexIndex = 0;
+  pexNames.push_back("drugs");
+  pexNames.push_back("comet");
+  pexNames.push_back("fire-fall");
+  pexNames.push_back("fire-camp");
+  pexNames.push_back("the-eye");
 
-  if (!emitter.loadFromXml("particles/fire-camp.pex")) {
-    ofLog(OF_LOG_ERROR, "Filed to load emitter config");
+  string filePath = "particles/" + pexNames[pexIndex] + ".pex";
+  if (!emitter.loadFromXml(filePath)) {
+    ofLog(OF_LOG_ERROR, "Failed to load emitter definition");
   }
 }
 
@@ -17,6 +25,7 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+  emitter.setPosition(mousePosition);
   emitter.draw();
 }
 
@@ -32,7 +41,7 @@ void ofApp::keyReleased(int key){
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y){
-  emitter.setPosition(ofVec2f(x, y));
+  mousePosition = ofVec2f(x, y);
 }
 
 //--------------------------------------------------------------
@@ -42,7 +51,11 @@ void ofApp::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
-
+  pexIndex = (pexIndex+1) % pexNames.size();
+  string filePath = "particles/" + pexNames[pexIndex] + ".pex";
+  if (!emitter.loadFromXml(filePath)) {
+    ofLog(OF_LOG_ERROR, "Failed to load emitter definition");
+  }
 }
 
 //--------------------------------------------------------------
