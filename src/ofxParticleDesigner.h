@@ -133,15 +133,14 @@ private:
   
   
   //
-  
   ofShader particleShader;
-  	ParticleQuad *quads;        // Array holding quad information for each particle;
   
   
-      bool _opacityModifyRGB;
+  
+  ParticleQuad *quads;        // Array holding quad information for each particle;
+  bool _opacityModifyRGB;
   GLuint verticesID;			// Holds the buffer name of the VBO that stores the color and vertices info for the particles
-
-    GLushort *indices;          // Array holding an index reference into an array of quads for rendering  
+  GLushort *indices;          // Array holding an index reference into an array of quads for rendering
   GLuint inPositionAttrib,   // Shader program attributes and uniforms
   inColorAttrib,
   inTexCoordAttrib,

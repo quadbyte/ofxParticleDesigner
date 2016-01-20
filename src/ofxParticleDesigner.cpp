@@ -565,21 +565,12 @@ void ofxParticleEmitter::draw() {
 }
 // ------------------------------------------------------------------------
 void ofxParticleEmitter::drawParticles() {
-//  
-//  glColor3f(1.0f, 1.0f, 1.0f);
-//  glRectf(0, 0, 30, 30);
-
   
-  //return;
-//  ofEnablePointSprites();
-////  ofDisableArbTex();
-//
- // particleShader.begin();
+#if 0
+  particleShader.begin();
 
-//  //glClear(GL_COLOR_BUFFER_BIT);
-//  
-//  // Bind to the texture that has been loaded for this particle system
-    texture->getTexture().bind();
+  // Bind to the texture that has been loaded for this particle system
+  texture->getTexture().bind();
   
   // Bind to the verticesID VBO and popuate it with the necessary vertex, color and texture informaiton
   glBindBuffer(GL_ARRAY_BUFFER, verticesID);
@@ -614,37 +605,14 @@ void ofxParticleEmitter::drawParticles() {
 
   texture->getTexture().unbind();
   
-  //particleShader.end();
-  
-  /*
-  
-  // clear vbo
-  vboMesh.clear();
-  
-  // Copy all vertices to the billboard
-//  vboMesh.addVertices(mesh.getVerticesPointer(), mesh.getNumVertices());
-  //vboMesh.getNormals().resize(mesh.getNumVertices(), ofVec3f(0));
-  vboMesh.setUsage(GL_DYNAMIC_DRAW);
-  vboMesh.setMode(OF_PRIMITIVE_POINTS);
-  
-  
-  
-  // Draw points
-  shader.begin();
-//  ofEnablePointSprites();
-  texture.getTexture().bind();
-    //billboards.draw();
-  texture.getTexture().unbind();
-  //ofDisablePointSprites();
-  shader.end();
-  
-*/
+  particleShader.end();
+#endif
   
 
   
-#if 0
-  // BLENDING MODE ARE NOT PROPERLY RESPECTED FOR NOW
-  ofEnableAlphaBlending();
+#if 1
+  glEnable(GL_BLEND);
+  glBlendEquation(GL_FUNC_ADD);
   glBlendFunc(blendFuncSource, blendFuncDestination);
   for (int i=0; i<particleCount; i++) {
     Particle *p = &particles[i];
@@ -700,7 +668,6 @@ void ofxParticleEmitter::setupArrays() {
   
   // If one of the arrays cannot be allocated throw an assertion as this is bad
 //  NSAssert(particles && quads, @"ERROR - ParticleEmitter: Could not allocate arrays.");
-  
   // Generate the vertices VBO
   glGenBuffers(1, &verticesID);
   glBindBuffer(GL_ARRAY_BUFFER, verticesID);
@@ -727,15 +694,6 @@ void ofxParticleEmitter::setupShaders() {
   inPositionAttrib = 0;
   inColorAttrib = 1;
   inTexCoordAttrib = 2;
-
-//  
-//  particleShader.bindAttribute(inPositionAttrib, "inPosition");
-//  particleShader.bindAttribute(inColorAttrib, "inColor");
-//  particleShader.bindAttribute(inTexCoordAttrib, "inTexCoord");
-//  
-//  if (!particleShader.linkProgram()) {
-//    exit(1);
-//  }
   
   // Setup our uniform pointer indexes. This must be done after the program is linked and used as uniform indexes are allocated
   // dynamically by OpenGL
@@ -749,40 +707,4 @@ void ofxParticleEmitter::setupShaders() {
   ofMatrix4x4 projectionMatrix;
   projectionMatrix.makeOrthoMatrix(0, ofGetWidth(), 0, ofGetHeight(), 1, -1);
   glUniformMatrix4fv(MPMtxUniform, 1, GL_FALSE, (float*)projectionMatrix._mat);
-  
-#if 0
-//  // Compile the shaders we are using...
-//  particleShader = [[GLSLProgram alloc] initWithVertexShaderFilename:@"particleVertexShader"
-//                                              fragmentShaderFilename:@"particleFragmentShader"];
-  
-  // ... and add the attributes the shader needs for the vertex position, color and texture st information
-//  [particleShader addAttribute:@"inPosition"];
-//  [particleShader addAttribute:@"inColor"];
-//  [particleShader addAttribute:@"inTexCoord"];
-  
-  // Check to make sure everything lnked OK
-  if (![particleShader link]) {
-    NSLog(@"Linking failed");
-    NSLog(@"Program log: %@", [particleShader programLog]);
-    NSLog(@"Vertex log: %@", [particleShader vertexShaderLog]);
-    NSLog(@"Fragment log: %@", [particleShader fragmentShaderLog]);
-    particleShader = nil;
-    exit(1);
-  }
-  
-  // Setup the index pointers into the shader for our attributes
-  inPositionAttrib = [particleShader attributeIndex:@"inPosition"];
-  inColorAttrib = [particleShader attributeIndex:@"inColor"];
-  inTexCoordAttrib = [particleShader attributeIndex:@"inTexCoord"];
-  
-  // Tell OpenGL we want to use this program. This must be done before we set up the pointer indexes for the uniform values
-  // we need
-  [particleShader use];
-  
-  // Setup our uniform pointer indexes. This must be done after the program is linked and used as uniform indexes are allocated
-  // dynamically by OpenGL
-  textureUniform = [particleShader uniformIndex:@"texture"];
-  MPMtxUniform = [particleShader uniformIndex:@"MPMatrix"];
-  u_opacityModifyRGB = [particleShader uniformIndex:@"u_opacityModifyRGB"];
-#endif
 }

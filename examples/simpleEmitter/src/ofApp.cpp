@@ -19,7 +19,6 @@ void ofApp::setup(){
   }
 
   string filePath = "particles/" + pexNames[pexIndex];
-  emitter.setPosition(ofVec2f(300,300));
   if (!emitter.loadFromXml(filePath)) {
     ofLog(OF_LOG_ERROR, "Failed to load emitter definition");
   }
@@ -28,6 +27,7 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
   emitter.update();
+  emitter.setPosition(ofVec2f(ofGetWidth()/2, ofGetHeight()/2));
 }
 
 //--------------------------------------------------------------
