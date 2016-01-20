@@ -27,6 +27,19 @@ enum kParticleTypes {
 //  ofFloatColor color;
 //} PointSprite;
 
+typedef struct {
+  ofVec2f vertex;
+  ofVec2f texture;
+  ofFloatColor color;
+} TexturedColoredVertex;
+
+typedef struct {
+  TexturedColoredVertex bl;
+  TexturedColoredVertex br;
+  TexturedColoredVertex tl;
+  TexturedColoredVertex tr;
+} ParticleQuad;
+
 // Structure used to hold particle specific information
 typedef struct {
   ofVec2f position;
@@ -66,6 +79,7 @@ public:
 protected:
   void parseConfig(ofxXmlSettings* settings);
   void setupArrays();
+  void setupShaders();
   void loadTextureFromEncodedData(const char* encodedData);
 
   void stop();
@@ -115,4 +129,25 @@ private:
   Particle*     particles;		// Array of particles that hold the particle emitters particle details
   ofImage*      texture;
   float         lastUpdateTime;
+  
+  
+  
+  //
+  
+  ofShader particleShader;
+  	ParticleQuad *quads;        // Array holding quad information for each particle;
+  
+  
+      bool _opacityModifyRGB;
+  GLuint verticesID;			// Holds the buffer name of the VBO that stores the color and vertices info for the particles
+
+    GLushort *indices;          // Array holding an index reference into an array of quads for rendering  
+  GLuint inPositionAttrib,   // Shader program attributes and uniforms
+  inColorAttrib,
+  inTexCoordAttrib,
+  textureUniform,
+  MPMtxUniform,
+  u_opacityModifyRGB;
+
+  
 };

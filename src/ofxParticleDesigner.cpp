@@ -78,6 +78,7 @@ bool ofxParticleEmitter::loadFromXml(const std::string& filename) {
   if (active) {
     parseConfig(settings);
     setupArrays();
+    setupShaders();
   }
 
   delete settings;
@@ -165,17 +166,35 @@ void ofxParticleEmitter::parseConfig(ofxXmlSettings*	settings)
 
   // Calculate the emission rate
   emissionRate = maxParticles / particleLifespan;
-
-//  bool premultiplied = false;
+  
+//  // Create a UIImage from the tiff data to extract colorspace and alpha info
+//  UIImage *image = [UIImage imageWithData:tiffData];
+//  CGImageAlphaInfo info = CGImageGetAlphaInfo(image.CGImage);
+//  CGColorSpaceRef colorSpace = CGImageGetColorSpace(image.CGImage);
+//  
+//  // Detect if the image contains alpha data
+//  BOOL hasAlpha = ((info == kCGImageAlphaPremultipliedLast) ||
+//                   (info == kCGImageAlphaPremultipliedFirst) ||
+//                   (info == kCGImageAlphaLast) ||
+//                   (info == kCGImageAlphaFirst) ? YES : NO);
+//  
+//  // Detect if alpha data is premultiplied
+//  BOOL premultiplied = colorSpace && hasAlpha;
+//  
+//  // Is opacity modification required
+//  _opacityModifyRGB = NO;
 //  if (blendFuncSource == GL_ONE && blendFuncDestination == GL_ONE_MINUS_SRC_ALPHA) {
-//    if (premultiplied) {
-//      //_opacityModifyRGB = YES;
-//    }
+//    if (premultiplied)
+//      _opacityModifyRGB = YES;
 //    else {
 //      blendFuncSource = GL_SRC_ALPHA;
 //      blendFuncDestination = GL_ONE_MINUS_SRC_ALPHA;
 //    }
 //  }
+
+  
+  _opacityModifyRGB = false;
+
 }
 // ------------------------------------------------------------------------
 void ofxParticleEmitter::loadTextureFromEncodedData(const char* encodedData) {
@@ -223,17 +242,16 @@ void ofxParticleEmitter::loadTextureFromEncodedData(const char* encodedData) {
   texture->load(buff);
   texture->setAnchorPercent(0.5f, 0.5f);
   texture->setUseTexture(true);
-}
-// ------------------------------------------------------------------------
-void ofxParticleEmitter::setupArrays() {
-  // Allocate the memory necessary for the particle emitter arrays
-  particles = (Particle*)malloc(sizeof(Particle) * maxParticles);
+  
+//  CGImageAlphaInfo info = CGImageGetAlphaInfo(textue.getPixel().getData());
+//  CGColorSpaceRef colorSpace = CGImageGetColorSpace(image.CGImage);
+//  
+//  // Detect if the image contains alpha data
+//  BOOL hasAlpha = ((info == kCGImageAlphaPremultipliedLast) ||
+//                   (info == kCGImageAlphaPremultipliedFirst) ||
+//                   (info == kCGImageAlphaLast) ||
+//                   (info == kCGImageAlphaFirst) ? YES : NO);
 
-  // Set the particle count to zero
-  particleCount = 0;
-
-  // Reset the elapsed time
-  elapsedTime = 0;
 }
 // ------------------------------------------------------------------------
 void ofxParticleEmitter::stop() {
@@ -455,6 +473,66 @@ void ofxParticleEmitter::update() {
       // Update the rotation of the particle
       currentParticle->rotation += currentParticle->rotationDelta * aDelta;
 
+      // As we are rendering the particles as quads, we need to define 6 vertices for each particle
+      GLfloat halfSize = currentParticle->particleSize * 0.5f;
+      
+      // If a rotation has been defined for this particle then apply the rotation to the vertices that define
+      // the particle
+      if (currentParticle->rotation) {
+        float x1 = -halfSize;
+        float y1 = -halfSize;
+        float x2 = halfSize;
+        float y2 = halfSize;
+        float x = currentParticle->position.x;
+        float y = currentParticle->position.y;
+        float r = currentParticle->rotation * DEG_TO_RAD;
+        float cr = cosf(r);
+        float sr = sinf(r);
+        float ax = x1 * cr - y1 * sr + x;
+        float ay = x1 * sr + y1 * cr + y;
+        float bx = x2 * cr - y1 * sr + x;
+        float by = x2 * sr + y1 * cr + y;
+        float cx = x2 * cr - y2 * sr + x;
+        float cy = x2 * sr + y2 * cr + y;
+        float dx = x1 * cr - y2 * sr + x;
+        float dy = x1 * sr + y2 * cr + y;
+        
+        quads[particleIndex].bl.vertex.x = ax;
+        quads[particleIndex].bl.vertex.y = ay;
+        quads[particleIndex].bl.color = currentParticle->color;
+        
+        quads[particleIndex].br.vertex.x = bx;
+        quads[particleIndex].br.vertex.y = by;
+        quads[particleIndex].br.color = currentParticle->color;
+        
+        quads[particleIndex].tl.vertex.x = dx;
+        quads[particleIndex].tl.vertex.y = dy;
+        quads[particleIndex].tl.color = currentParticle->color;
+        
+        quads[particleIndex].tr.vertex.x = cx;
+        quads[particleIndex].tr.vertex.y = cy;
+        quads[particleIndex].tr.color = currentParticle->color;
+      } else {
+        // Using the position of the particle, work out the four vertices for the quad that will hold the particle
+        // and load those into the quads array.
+        quads[particleIndex].bl.vertex.x = currentParticle->position.x - halfSize;
+        quads[particleIndex].bl.vertex.y = currentParticle->position.y - halfSize;
+        quads[particleIndex].bl.color = currentParticle->color;
+        
+        quads[particleIndex].br.vertex.x = currentParticle->position.x + halfSize;
+        quads[particleIndex].br.vertex.y = currentParticle->position.y - halfSize;
+        quads[particleIndex].br.color = currentParticle->color;
+        
+        quads[particleIndex].tl.vertex.x = currentParticle->position.x - halfSize;
+        quads[particleIndex].tl.vertex.y = currentParticle->position.y + halfSize;
+        quads[particleIndex].tl.color = currentParticle->color;
+        
+        quads[particleIndex].tr.vertex.x = currentParticle->position.x + halfSize;
+        quads[particleIndex].tr.vertex.y = currentParticle->position.y + halfSize;
+        quads[particleIndex].tr.color = currentParticle->color;
+      }
+
+      
       // Update the particle counter
       particleIndex++;
     }
@@ -479,7 +557,7 @@ void ofxParticleEmitter::draw() {
   if (!active) {
     return;
   }
-
+  
   ofPushMatrix();
   ofTranslate(sourcePosition.x, sourcePosition.y, 0);
   drawParticles();
@@ -487,14 +565,87 @@ void ofxParticleEmitter::draw() {
 }
 // ------------------------------------------------------------------------
 void ofxParticleEmitter::drawParticles() {
-  //glEnable(GL_BLEND);
+//  
+//  glColor3f(1.0f, 1.0f, 1.0f);
+//  glRectf(0, 0, 30, 30);
 
-  // BLENDING MODE ARO NOT PROPERLY RESPECTED FOR NOW
-//  ofEnableAlphaBlending();
-//  glBlendEquation(GL_FUNC_ADD);
-  //glBlendFunc(blendFuncSource, blendFuncDestination);
-  //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
+  //return;
+//  ofEnablePointSprites();
+////  ofDisableArbTex();
+//
+ // particleShader.begin();
 
+//  //glClear(GL_COLOR_BUFFER_BIT);
+//  
+//  // Bind to the texture that has been loaded for this particle system
+    texture->getTexture().bind();
+  
+  // Bind to the verticesID VBO and popuate it with the necessary vertex, color and texture informaiton
+  glBindBuffer(GL_ARRAY_BUFFER, verticesID);
+  
+  // Using glBufferSubData means that a copy is done from the quads array to the buffer rather than recreating the buffer which
+  // would be an allocation and copy. The copy also only takes over the number of live particles. This provides a nice performance
+  // boost.
+  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ParticleQuad) * particleIndex, quads);
+  
+  // Make sure that the vertex attributes we are using are enabled. This is a cheap call so OK to do each frame
+  glEnableVertexAttribArray(inPositionAttrib);
+  glEnableVertexAttribArray(inColorAttrib);
+  glEnableVertexAttribArray(inTexCoordAttrib);
+  
+  // Configure the vertex pointer which will use the currently bound VBO for its data
+  glVertexAttribPointer(inPositionAttrib, 2, GL_FLOAT, GL_FALSE, sizeof(TexturedColoredVertex), 0);
+  glVertexAttribPointer(inColorAttrib, 4, GL_FLOAT, GL_FALSE, sizeof(TexturedColoredVertex), (GLvoid*) offsetof(TexturedColoredVertex, color));
+  glVertexAttribPointer(inTexCoordAttrib, 2, GL_FLOAT, GL_FALSE, sizeof(TexturedColoredVertex), (GLvoid*) offsetof(TexturedColoredVertex, texture));
+  
+  // Set the blend function based on the configuration
+  glBlendFunc(blendFuncSource, blendFuncDestination);
+  
+  // Set the opacity modifier shader parameter
+  glUniform1i(u_opacityModifyRGB, _opacityModifyRGB);
+  
+  // Now that all of the VBOs have been used to configure the vertices, pointer size and color
+  // use glDrawArrays to draw the points
+  glDrawElements(GL_TRIANGLES, particleIndex * 6, GL_UNSIGNED_SHORT, indices);
+  
+  // Unbind the current VBO
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+  texture->getTexture().unbind();
+  
+  //particleShader.end();
+  
+  /*
+  
+  // clear vbo
+  vboMesh.clear();
+  
+  // Copy all vertices to the billboard
+//  vboMesh.addVertices(mesh.getVerticesPointer(), mesh.getNumVertices());
+  //vboMesh.getNormals().resize(mesh.getNumVertices(), ofVec3f(0));
+  vboMesh.setUsage(GL_DYNAMIC_DRAW);
+  vboMesh.setMode(OF_PRIMITIVE_POINTS);
+  
+  
+  
+  // Draw points
+  shader.begin();
+//  ofEnablePointSprites();
+  texture.getTexture().bind();
+    //billboards.draw();
+  texture.getTexture().unbind();
+  //ofDisablePointSprites();
+  shader.end();
+  
+*/
+  
+
+  
+#if 0
+  // BLENDING MODE ARE NOT PROPERLY RESPECTED FOR NOW
+  ofEnableAlphaBlending();
+  glBlendFunc(blendFuncSource, blendFuncDestination);
   for (int i=0; i<particleCount; i++) {
     Particle *p = &particles[i];
     ofSetColor(p->color.r*255.0f, p->color.g*255.0f, p->color.b*255.0f, p->color.a*255.0f);
@@ -505,6 +656,133 @@ void ofxParticleEmitter::drawParticles() {
       texture->draw(0, 0, p->particleSize, p->particleSize);
     ofPopMatrix();
   }
-//  glDisable(GL_BLEND);
+#endif
+
+  
+  
 }
+
 // ------------------------------------------------------------------------
+// ------------------------------------------------------------------------
+void ofxParticleEmitter::setupArrays() {
+  // Allocate the memory necessary for the particle emitter arrays
+  particles = (Particle*)malloc(sizeof(Particle) * maxParticles);
+  quads = (ParticleQuad*)calloc(sizeof(ParticleQuad), maxParticles);
+  indices = (GLushort*)calloc(sizeof(GLushort), maxParticles * 6);
+
+  // Set up the indices for all particles. This provides an array of indices into the quads array that is used during
+  // rendering. As we are rendering quads there are six indices for each particle as each particle is made of two triangles
+  // that are each defined by three vertices.
+  for( int i=0; i<maxParticles; i++) {
+    indices[i*6+0] = i*4+0;
+    indices[i*6+1] = i*4+1;
+    indices[i*6+2] = i*4+2;
+    
+    indices[i*6+5] = i*4+2;
+    indices[i*6+4] = i*4+3;
+    indices[i*6+3] = i*4+1;
+  }
+  
+  // Set up texture coordinates for all particles as these will not change.
+  for(int i=0; i<maxParticles; i++) {
+    quads[i].bl.texture.x = 0;
+    quads[i].bl.texture.y = 0;
+    
+    quads[i].br.texture.x = 1;
+    quads[i].br.texture.y = 0;
+    
+    quads[i].tl.texture.x = 0;
+    quads[i].tl.texture.y = 1;
+    
+    quads[i].tr.texture.x = 1;
+    quads[i].tr.texture.y = 1;
+  }
+  
+  // If one of the arrays cannot be allocated throw an assertion as this is bad
+//  NSAssert(particles && quads, @"ERROR - ParticleEmitter: Could not allocate arrays.");
+  
+  // Generate the vertices VBO
+  glGenBuffers(1, &verticesID);
+  glBindBuffer(GL_ARRAY_BUFFER, verticesID);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(ParticleQuad) * maxParticles, quads, GL_DYNAMIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  // By default the particle emitter is active when created
+  active = true;
+
+  // Set the particle count to zero
+  particleCount = 0;
+  
+  // Reset the elapsed time
+  elapsedTime = 0;
+}
+
+
+void ofxParticleEmitter::setupShaders() {
+  
+  particleShader.load("shaders/particle");
+  particleShader.printActiveAttributes();
+  particleShader.printActiveUniforms();
+  
+  inPositionAttrib = 0;
+  inColorAttrib = 1;
+  inTexCoordAttrib = 2;
+
+//  
+//  particleShader.bindAttribute(inPositionAttrib, "inPosition");
+//  particleShader.bindAttribute(inColorAttrib, "inColor");
+//  particleShader.bindAttribute(inTexCoordAttrib, "inTexCoord");
+//  
+//  if (!particleShader.linkProgram()) {
+//    exit(1);
+//  }
+  
+  // Setup our uniform pointer indexes. This must be done after the program is linked and used as uniform indexes are allocated
+  // dynamically by OpenGL
+  textureUniform = particleShader.getUniformLocation("texture");
+  MPMtxUniform = particleShader.getUniformLocation("MPMatrix");
+  u_opacityModifyRGB = particleShader.getUniformLocation("u_opacityModifyRGB");
+  
+  
+  // Set up the projection matrix to be used for the emitter, this only needs to be set once
+  // which is why it is in here.
+  ofMatrix4x4 projectionMatrix;
+  projectionMatrix.makeOrthoMatrix(0, ofGetWidth(), 0, ofGetHeight(), 1, -1);
+  glUniformMatrix4fv(MPMtxUniform, 1, GL_FALSE, (float*)projectionMatrix._mat);
+  
+#if 0
+//  // Compile the shaders we are using...
+//  particleShader = [[GLSLProgram alloc] initWithVertexShaderFilename:@"particleVertexShader"
+//                                              fragmentShaderFilename:@"particleFragmentShader"];
+  
+  // ... and add the attributes the shader needs for the vertex position, color and texture st information
+//  [particleShader addAttribute:@"inPosition"];
+//  [particleShader addAttribute:@"inColor"];
+//  [particleShader addAttribute:@"inTexCoord"];
+  
+  // Check to make sure everything lnked OK
+  if (![particleShader link]) {
+    NSLog(@"Linking failed");
+    NSLog(@"Program log: %@", [particleShader programLog]);
+    NSLog(@"Vertex log: %@", [particleShader vertexShaderLog]);
+    NSLog(@"Fragment log: %@", [particleShader fragmentShaderLog]);
+    particleShader = nil;
+    exit(1);
+  }
+  
+  // Setup the index pointers into the shader for our attributes
+  inPositionAttrib = [particleShader attributeIndex:@"inPosition"];
+  inColorAttrib = [particleShader attributeIndex:@"inColor"];
+  inTexCoordAttrib = [particleShader attributeIndex:@"inTexCoord"];
+  
+  // Tell OpenGL we want to use this program. This must be done before we set up the pointer indexes for the uniform values
+  // we need
+  [particleShader use];
+  
+  // Setup our uniform pointer indexes. This must be done after the program is linked and used as uniform indexes are allocated
+  // dynamically by OpenGL
+  textureUniform = [particleShader uniformIndex:@"texture"];
+  MPMtxUniform = [particleShader uniformIndex:@"MPMatrix"];
+  u_opacityModifyRGB = [particleShader uniformIndex:@"u_opacityModifyRGB"];
+#endif
+}

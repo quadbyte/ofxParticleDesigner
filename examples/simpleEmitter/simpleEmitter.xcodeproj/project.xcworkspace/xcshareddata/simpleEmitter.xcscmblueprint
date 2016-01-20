@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "B76CB4F509C5EE4A48288F65300ECE09A5C537C2",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "B76CB4F509C5EE4A48288F65300ECE09A5C537C2" : 0,
+    "50F2782AB31D665DCB4B5368C7B483CBA5E9CEA5" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "17546920-A26B-432F-BE0A-9A33E24C623F",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "B76CB4F509C5EE4A48288F65300ECE09A5C537C2" : "ofxParticleDesigner\/",
+    "50F2782AB31D665DCB4B5368C7B483CBA5E9CEA5" : "..\/.."
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "simpleEmitter",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "examples\/simpleEmitter\/simpleEmitter.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/squadbyte\/digital-skin.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "50F2782AB31D665DCB4B5368C7B483CBA5E9CEA5"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/quadbyte\/ofxParticleDesigner.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "B76CB4F509C5EE4A48288F65300ECE09A5C537C2"
+    }
+  ]
+}

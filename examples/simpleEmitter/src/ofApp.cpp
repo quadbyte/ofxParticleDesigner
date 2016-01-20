@@ -3,7 +3,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-  ofBackground(0);
+  ofBackground(64);
   
   pexIndex = 0;
   
@@ -19,6 +19,7 @@ void ofApp::setup(){
   }
 
   string filePath = "particles/" + pexNames[pexIndex];
+  emitter.setPosition(ofVec2f(300,300));
   if (!emitter.loadFromXml(filePath)) {
     ofLog(OF_LOG_ERROR, "Failed to load emitter definition");
   }
@@ -35,7 +36,7 @@ void ofApp::draw(){
   ofSetColor(255);
   ofDrawBitmapString(pexNames[pexIndex] + " [" + ofToString(emitter.getParticlesCount()) + "/" + ofToString(emitter.getMaxParticles()) + "]", 20, 20);
 
-  emitter.setPosition(mousePosition);
+//  emitter.setPosition(mousePosition);
   emitter.draw();
 }
 
